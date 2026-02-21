@@ -5,62 +5,47 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreEducationGroupRequest;
 use App\Http\Requests\UpdateEducationGroupRequest;
 use App\Models\EducationGroup;
+use Illuminate\Http\Request;
 
 class EducationGroupController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        return response()->json(
+            EducationGroup::query()->orderBy('name')->get()
+        );
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        //
+        return response()->json(['message' => 'Not implemented'], 501);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(StoreEducationGroupRequest $request)
     {
-        //
+        $group = EducationGroup::create($request->validated());
+        return response()->json($group, 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(EducationGroup $educationGroup)
     {
-        //
+        return response()->json($educationGroup);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(EducationGroup $educationGroup)
     {
-        //
+        return response()->json(['message' => 'Not implemented'], 501);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(UpdateEducationGroupRequest $request, EducationGroup $educationGroup)
     {
-        //
+        $educationGroup->update($request->validated());
+        return response()->json($educationGroup);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(EducationGroup $educationGroup)
     {
-        //
+        $educationGroup->delete();
+        return response()->json(['message' => 'گروه آموزشی حذف شد.']);
     }
 }

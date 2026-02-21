@@ -6,6 +6,8 @@ use App\Http\Requests\StoreStudentRequest;
 use App\Http\Requests\UpdateStudentRequest;
 use App\Models\Student;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class StudentController extends Controller
 {
@@ -66,8 +68,19 @@ class StudentController extends Controller
      */
     public function store(StoreStudentRequest $request)
     {
-        // ✅ validation is already done here:
-        $student = Student::create($request->validated());
+        $data = $request->validated();
+
+        // photo را از داده‌ها جدا می‌کنیم (چون فایل هست نه string)
+        unset($data['photo']);
+
+        $student = Student::create($data);
+
+        // اگر عکس داشت:
+        if ($request->hasFile('photo')) {
+            $photoPath = $this->storeStudentPhoto($student, $request->file('photo'));
+            $student->update(['photo_path' => $photoPath]);
+        }
+
         $student->load(['college', 'educationGroup', 'major']);
 
         return response()->json($student, 201);
@@ -106,8 +119,17 @@ class StudentController extends Controller
      */
     public function update(UpdateStudentRequest $request, Student $student)
     {
-        // ✅ validation is already done here:
-        $student->update($request->validated());
+        $data = $request->validated();
+        unset($data['photo']);
+
+        $student->update($data);
+
+        // اگر عکس جدید ارسال شد => overwrite
+        if ($request->hasFile('photo')) {
+            $photoPath = $this->storeStudentPhoto($student->fresh(), $request->file('photo'));
+            $student->update(['photo_path' => $photoPath]);
+        }
+
         $student->load(['college', 'educationGroup', 'major']);
 
         return response()->json($student);
@@ -122,5 +144,37 @@ class StudentController extends Controller
         $student->delete();
 
         return response()->json(['message' => 'دانشجو حذف شد.']);
+    }
+
+    /**
+     * ذخیره عکس دانشجو با نام ثابت (برای overwrite)
+     * خروجی: مسیر قابل نمایش از public مثل /storage/...
+     */
+    private function storeStudentPhoto(Student $student, \Illuminate\Http\UploadedFile $file): string
+    {
+        // نام فایل بر اساس شماره + نام (برای خوانایی)
+        $base = $student->student_number . '-' . $student->first_name . '-' . $student->last_name;
+        $safeBase = Str::slug($base); // تبدیل به safe string
+        $ext = strtolower($file->getClientOriginalExtension() ?: 'jpg');
+
+        // مسیر ثابت => overwrite همیشه
+        $relativePath = "students/photos/{$safeBase}.{$ext}";
+
+        // اگر قبلاً عکسی بوده، فایل قبلی را حذف کن (حتی اگر ext فرق کند)
+        // (اگر نمی‌خوای این بخش را هم میشه حذف کرد)
+        if ($student->photo_path) {
+            $old = str_replace('/storage/', '', $student->photo_path);
+            Storage::disk('public')->delete($old);
+        }
+
+        // ذخیره روی disk public
+        Storage::disk('public')->putFileAs(
+            'students/photos',
+            $file,
+            "{$safeBase}.{$ext}"
+        );
+
+        // آدرس قابل نمایش
+        return "/storage/{$relativePath}";
     }
 }
