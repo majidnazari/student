@@ -5,62 +5,47 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreCollegeRequest;
 use App\Http\Requests\UpdateCollegeRequest;
 use App\Models\College;
+use Illuminate\Http\Request;
 
 class CollegeController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        return response()->json(
+            College::query()->orderBy('name')->get()
+        );
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        //
+        return response()->json(['message' => 'Not implemented'], 501);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(StoreCollegeRequest $request)
     {
-        //
+        $college = College::create($request->validated());
+        return response()->json($college, 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(College $college)
     {
-        //
+        return response()->json($college);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(College $college)
     {
-        //
+        return response()->json(['message' => 'Not implemented'], 501);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(UpdateCollegeRequest $request, College $college)
     {
-        //
+        $college->update($request->validated());
+        return response()->json($college);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(College $college)
     {
-        //
+        $college->delete();
+        return response()->json(['message' => 'دانشکده حذف شد.']);
     }
 }

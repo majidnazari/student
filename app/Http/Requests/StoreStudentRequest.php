@@ -31,6 +31,7 @@ class StoreStudentRequest extends FormRequest
             'last_name' => ['required', 'string', 'max:100'],
 
             'photo_path' => ['nullable', 'string', 'max:500'],
+            'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ];
     }
 }

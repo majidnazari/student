@@ -5,62 +5,53 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreMajorRequest;
 use App\Http\Requests\UpdateMajorRequest;
 use App\Models\Major;
+use Illuminate\Http\Request;
 
 class MajorController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        $majors = Major::query()
+            ->when(
+                $request->filled('education_group_id'),
+                fn($q) => $q->where('education_group_id', (int) $request->input('education_group_id'))
+            )
+            ->orderBy('name')
+            ->get();
+
+        return response()->json($majors);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        //
+        return response()->json(['message' => 'Not implemented'], 501);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(StoreMajorRequest $request)
     {
-        //
+        $major = Major::create($request->validated());
+        return response()->json($major, 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(Major $major)
     {
-        //
+        return response()->json($major);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(Major $major)
     {
-        //
+        return response()->json(['message' => 'Not implemented'], 501);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(UpdateMajorRequest $request, Major $major)
     {
-        //
+        $major->update($request->validated());
+        return response()->json($major);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Major $major)
     {
-        //
+        $major->delete();
+        return response()->json(['message' => 'رشته حذف شد.']);
     }
 }
